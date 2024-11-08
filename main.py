@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, Toplevel, Checkbutton, IntVar, Canvas, Scrollbar, Frame
+from tkinter import messagebox, Toplevel, Checkbutton, IntVar, Canvas, Scrollbar, Frame, Label, Button
 from lamport_clock import LamportClockSimulator
 
 class LamportClockApp:
@@ -8,7 +8,7 @@ class LamportClockApp:
         self.master.title("Lamport's Clock Simulator")
 
         # Set window size
-        self.set_window_size(700, 500)
+        self.set_window_size(900, 600)
 
         self.simulator = None
 
@@ -57,7 +57,6 @@ class LamportClockApp:
         )
 
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="n")
-
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         # Pack canvas and scrollbar
@@ -68,10 +67,8 @@ class LamportClockApp:
         # Number of processes input
         self.label_num_processes = tk.Label(self.scrollable_frame, text="Enter number of processes:")
         self.label_num_processes.pack(pady=10)
-
         self.entry_num_processes = tk.Entry(self.scrollable_frame)
         self.entry_num_processes.pack(pady=10)
-
         self.btn_create_processes = tk.Button(self.scrollable_frame, text="Create Processes", command=self.create_processes)
         self.btn_create_processes.pack(pady=10)
 
@@ -224,17 +221,64 @@ class LamportClockApp:
             # Center the dialog on the screen
             self.center_window(dialog)
         else:
-            messagebox.showinfo("No Messages", "No messages in the queue to receive.")
+            messagebox.showinfo("No Messages", "No messages to receive for this process.")
 
     def take_snapshot(self):
-        """Takes a snapshot of the current state of the simulator."""
-        snapshot = self.simulator.snapshot()
-        self.snapshot_label.config(text="Snapshot: " + ', '.join(snapshot))
+        """Takes a snapshot of the clock values and displays them in a dialog box."""
+        # Get the snapshot from the simulator
+        snapshot = self.simulator.take_snapshot()
 
-def main():
+        # Create and display a dialog to show the snapshot values
+        self.show_snapshot_dialog(snapshot)
+
+    def show_snapshot_dialog(self, snapshot):
+        """Displays the snapshot values in a separate scrollable dialog box."""
+        dialog = Toplevel(self.master)
+        dialog.title("Snapshot of Process Clocks")
+
+        # Center the dialog on the screen
+        self.center_window(dialog)
+
+        # Create a canvas widget and a scrollbar
+        canvas = Canvas(dialog)
+        scrollbar = Scrollbar(dialog, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Create a frame inside the canvas to hold all the process labels
+        frame = Frame(canvas)
+
+        # Add title label to the frame
+        title_label = Label(frame, text="Snapshot of Each Process Clock Value", font=("Arial", 14, "bold"))
+        title_label.grid(row=0, column=0, pady=(10, 20))
+
+        # Create a label for each process with its clock value from the snapshot
+        row = 1
+        for process_id, clock_value in snapshot.items():
+            process_label = Label(frame, text=f"{process_id}: Clock = {clock_value}", font=("Arial", 12))
+            process_label.grid(row=row, column=0, pady=5, sticky="w")
+            row += 1
+
+        # Place the frame on the canvas
+        canvas.create_window((0, 0), window=frame, anchor="nw")
+
+        # Configure the scrollbar to work with the canvas
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        # Update the scroll region of the canvas after adding all labels
+        frame.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox("all"))
+
+        # Close button to dismiss the dialog
+        close_button = Button(dialog, text="Close", command=dialog.destroy)
+        close_button.pack(pady=20)
+
+
+
+
+
+# Initialize the main application
+if __name__ == "__main__":
     root = tk.Tk()
     app = LamportClockApp(root)
     root.mainloop()
-
-if __name__ == "__main__":
-    main()
