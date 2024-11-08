@@ -51,6 +51,7 @@ class LamportClockSimulator:
 
     def take_snapshot(self):
         """Takes a snapshot of the current clock values for all processes."""
-        snapshot = {f"P{i+1}": p.clock for i, p in enumerate(self.processes)}
+        snapshot = {f"P{i+1}": self.processes[i].clock for i in range(len(self.processes))}
         self.snapshots.append(snapshot)
         return snapshot
+
